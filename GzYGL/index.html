@@ -11,7 +11,7 @@
     href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github-dark.min.css"
   >
 
-  <link rel="stylesheet" href="/program/style.css">
+  <link rel="stylesheet" href="../style.css">
 </head>
 
 <body>
@@ -20,25 +20,57 @@
 
     <div class="top">
       <span>TTBSP CODE</span>
-
-      <button id="copyButton">
-        Copy
-      </button>
+      <button id="copyButton">Copy</button>
     </div>
 
-    <pre><code
-      id="codeBlock"
-      class="language-python"
-    ></code></pre>
-
-    <div id="error" class="hidden">
-      Code not found.
-    </div>
+    <pre><code id="codeBlock" class="language-python">Loading...</code></pre>
 
   </main>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
-  <script src="/program/app.js"></script>
+
+  <script>
+    const codeBlock = document.getElementById("codeBlock");
+    const copyButton = document.getElementById("copyButton");
+
+    let loadedCode = "";
+
+    async function loadCode() {
+      try {
+        const response = await fetch("../python/shinsi_1.py");
+
+        if (!response.ok) {
+          throw new Error("HTTP " + response.status);
+        }
+
+        loadedCode = await response.text();
+
+        codeBlock.textContent = loadedCode;
+
+        if (window.hljs) {
+          hljs.highlightElement(codeBlock);
+        }
+
+      } catch (error) {
+        codeBlock.textContent =
+          "読み込み失敗: " + error.message;
+      }
+    }
+
+    copyButton.addEventListener("click", async () => {
+      if (!loadedCode) return;
+
+      await navigator.clipboard.writeText(loadedCode);
+
+      copyButton.textContent = "Copied";
+
+      setTimeout(() => {
+        copyButton.textContent = "Copy";
+      }, 1000);
+    });
+
+    loadCode();
+  </script>
 
 </body>
 </html>
