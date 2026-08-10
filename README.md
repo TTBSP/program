@@ -1,6 +1,4 @@
-# TTBSP CODE Viewer
-
-GitHub Pages用のコード共有ビューアです。
+コードビューア。
 
 ## 使い方
 
