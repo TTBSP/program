@@ -1,208 +1,43 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#090b10" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <title>TTBSP CODE</title>
 
   <link
     rel="stylesheet"
     href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github-dark.min.css"
-  />
+  >
 
-  <link rel="stylesheet" href="/program/style.css" />
+  <link rel="stylesheet" href="/program/style.css">
 </head>
 
 <body>
 
-  <div class="bg-grid"></div>
+  <main>
 
-  <main class="shell">
+    <div class="top">
+      <span>TTBSP CODE</span>
 
-    <section id="viewer" class="viewer">
+      <button id="copyButton">
+        Copy
+      </button>
+    </div>
 
-      <header class="topbar">
+    <pre><code
+      id="codeBlock"
+      class="language-python"
+    ></code></pre>
 
-        <a
-          class="brand"
-          href="/program/"
-          aria-label="TTBSP CODE home"
-        >
-          <span class="brand-mark">&lt;/&gt;</span>
-          <span>TTBSP CODE</span>
-        </a>
-
-        <div
-          class="route-pill"
-          id="routePill"
-        >
-          loading
-        </div>
-
-      </header>
-
-
-      <section class="hero">
-
-        <div>
-
-          <p class="eyebrow">
-            SOURCE VIEWER
-          </p>
-
-          <h1 id="pageTitle">
-            Code Viewer
-          </h1>
-
-          <p
-            id="pageDescription"
-            class="description"
-          >
-            コードを読み込んでいます。
-          </p>
-
-        </div>
-
-
-        <div class="hero-actions">
-
-          <button
-            id="copyButton"
-            class="button primary"
-            type="button"
-            disabled
-          >
-
-            <span id="copyIcon">
-              ⧉
-            </span>
-
-            <span id="copyLabel">
-              コピー
-            </span>
-
-          </button>
-
-
-          <a
-            id="downloadButton"
-            class="button ghost disabled"
-            href="#"
-            download
-            aria-disabled="true"
-          >
-            ↓ ダウンロード
-          </a>
-
-        </div>
-
-      </section>
-
-
-      <section class="code-card">
-
-        <div class="code-toolbar">
-
-          <div class="language">
-
-            <span class="dot"></span>
-
-            <span id="languageLabel">
-              PYTHON
-            </span>
-
-          </div>
-
-          <span class="hint">
-            横にスクロールできます
-          </span>
-
-        </div>
-
-
-        <div class="code-wrap">
-
-          <div
-            id="lineNumbers"
-            class="line-numbers"
-            aria-hidden="true"
-          ></div>
-
-          <pre><code
-            id="codeBlock"
-            class="language-python"
-          >Loading...</code></pre>
-
-        </div>
-
-      </section>
-
-
-      <footer class="footer">
-
-        <span>
-          ttbsp.github.io/program
-        </span>
-
-        <span class="footer-separator">
-          •
-        </span>
-
-        <span>
-          Code shared for research
-        </span>
-
-      </footer>
-
-    </section>
-
-
-    <section
-      id="errorView"
-      class="error-view hidden"
-    >
-
-      <div class="error-card">
-
-        <span class="error-code">
-          404
-        </span>
-
-        <h1>
-          コードが見つかりません
-        </h1>
-
-        <p>
-          このURLには公開されたコードが割り当てられていません。
-        </p>
-
-        <a
-          class="button primary"
-          href="/program/"
-        >
-          トップへ戻る
-        </a>
-
-      </div>
-
-    </section>
+    <div id="error" class="hidden">
+      Code not found.
+    </div>
 
   </main>
 
-
-  <div
-    id="toast"
-    class="toast"
-    role="status"
-  >
-    コピーしました
-  </div>
-
-
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
-
   <script src="/program/app.js"></script>
 
 </body>
