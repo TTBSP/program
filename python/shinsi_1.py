@@ -4,32 +4,22 @@ import pyglet
 from pyglet import shapes
 from pyglet.window import key, mouse
 import pymunk
-
-# ============================================================
-# Inverted Pendulum Lab
-# Python + Pyglet 2.1.x + Pymunk 7.x
-# Verified against pyglet 2.1 Label(weight=...) and Line(thickness=...) APIs
-# ============================================================
-
-# -----------------------
-# Simulation parameters
-# -----------------------
 WIDTH = 1280
 HEIGHT = 720
 PANEL_X = 880
 SIM_W = PANEL_X
 
-PPM = 220.0                 # pixels per meter
-G = 9.81                    # m/s^2
-PHYSICS_DT = 1.0 / 240.0    # fixed physics step
+PPM = 220.0
+G = 9.81
+PHYSICS_DT = 1.0 / 240.0
 MAX_STEPS_PER_FRAME = 12
 
-CART_MASS = 2.0             # kg
-CART_W_M = 0.62             # m
-CART_H_M = 0.20             # m
-ROD_MASS = 0.35             # kg
-ROD_LENGTH_M = 1.00         # m
-ROD_RADIUS_M = 0.022        # m
+CART_MASS = 2.0
+CART_W_M = 0.62
+CART_H_M = 0.20
+ROD_MASS = 0.35
+ROD_LENGTH_M = 1.00
+ROD_RADIUS_M = 0.022
 
 CART_W = CART_W_M * PPM
 CART_H = CART_H_M * PPM
@@ -45,11 +35,7 @@ MANUAL_FORCE_N = 35.0
 MAX_MOTOR_FORCE_N = 90.0
 DISTURB_IMPULSE_NS = 0.22
 
-DEFAULT_FORMULA = "-60*theta"
-
-# -----------------------
-# Theme
-# -----------------------
+DEFAULT_FORMULA = "-90*theta"
 C_BG = (12, 15, 22)
 C_PANEL = (19, 23, 33)
 C_CARD = (25, 31, 43)
@@ -66,11 +52,6 @@ C_CART = (71, 133, 219)
 C_ROD = (237, 240, 247)
 C_WHEEL = (45, 52, 65)
 C_GRID = (37, 44, 58)
-
-# ============================================================
-# Safe formula evaluator
-# ============================================================
-
 ALLOWED_FUNCS = {
     "sin": math.sin,
     "cos": math.cos,
@@ -173,9 +154,9 @@ def compile_formula(text):
     return compile(tree, "<motor-formula>", "eval")
 
 
-# ============================================================
-# Small UI helpers
-# ============================================================
+
+
+
 
 class Button:
     def __init__(self, x, y, w, h, text, accent=False):
@@ -198,9 +179,9 @@ class Button:
         self.rect.color = C_ACCENT if active else C_CARD_2
 
 
-# ============================================================
-# Window / batches
-# ============================================================
+
+
+
 
 window = pyglet.window.Window(WIDTH, HEIGHT, "Inverted Pendulum Lab", resizable=False, vsync=True)
 
@@ -210,14 +191,14 @@ ui_batch = pyglet.graphics.Batch()
 chart_batch = pyglet.graphics.Batch()
 text_batch = pyglet.graphics.Batch()
 
-# Background and panel
+
 shapes.Rectangle(0, 0, WIDTH, HEIGHT, color=C_BG, batch=bg_batch)
 shapes.Rectangle(PANEL_X, 0, WIDTH - PANEL_X, HEIGHT, color=C_PANEL, batch=bg_batch)
 shapes.Line(PANEL_X, 0, PANEL_X, HEIGHT, thickness=1, color=C_BORDER, batch=bg_batch)
 
-# ============================================================
-# Physics
-# ============================================================
+
+
+
 
 space = pymunk.Space()
 space.gravity = (0, -G * PPM)
@@ -246,7 +227,7 @@ rod_shape.filter = pymunk.ShapeFilter(group=1)
 
 space.add(cart_body, cart_shape, rod_body, rod_shape)
 
-# Cart center is constrained to this horizontal groove.
+
 groove = pymunk.GrooveJoint(
     space.static_body,
     cart_body,
@@ -256,7 +237,7 @@ groove = pymunk.GrooveJoint(
 )
 rotation_lock = pymunk.RotaryLimitJoint(space.static_body, cart_body, 0, 0)
 
-# Pendulum pivot: cart top <-> rod bottom.
+
 pivot = pymunk.PivotJoint(
     cart_body,
     rod_body,
@@ -266,17 +247,17 @@ pivot = pymunk.PivotJoint(
 
 space.add(groove, rotation_lock, pivot)
 
-# ============================================================
-# Simulation drawing
-# ============================================================
 
-# Grid
+
+
+
+
 for gx in range(80, 841, 55):
     shapes.Line(gx, 95, gx, 625, thickness=1, color=C_GRID, batch=sim_batch)
 for gy in range(100, 626, 55):
     shapes.Line(60, gy, 850, gy, thickness=1, color=C_GRID, batch=sim_batch)
 
-# Track and end stops
+
 shapes.Line(TRACK_LEFT, TRACK_Y - CART_H / 2 - 18, TRACK_RIGHT, TRACK_Y - CART_H / 2 - 18,
             thickness=5, color=C_RAIL, batch=sim_batch)
 shapes.Line(TRACK_LEFT, TRACK_Y - CART_H / 2 - 32, TRACK_RIGHT, TRACK_Y - CART_H / 2 - 32,
@@ -284,7 +265,7 @@ shapes.Line(TRACK_LEFT, TRACK_Y - CART_H / 2 - 32, TRACK_RIGHT, TRACK_Y - CART_H
 shapes.Rectangle(TRACK_LEFT - 5, TRACK_Y - CART_H / 2 - 42, 10, 50, color=C_RAIL, batch=sim_batch)
 shapes.Rectangle(TRACK_RIGHT - 5, TRACK_Y - CART_H / 2 - 42, 10, 50, color=C_RAIL, batch=sim_batch)
 
-# Zero marker
+
 shapes.Line((TRACK_LEFT + TRACK_RIGHT) / 2, 115, (TRACK_LEFT + TRACK_RIGHT) / 2, 145,
             thickness=2, color=C_ACCENT, batch=sim_batch)
 
@@ -300,7 +281,7 @@ force_line = shapes.Line(0, 0, 0, 0, thickness=5, color=C_ACCENT, batch=sim_batc
 force_tip_a = shapes.Line(0, 0, 0, 0, thickness=4, color=C_ACCENT, batch=sim_batch)
 force_tip_b = shapes.Line(0, 0, 0, 0, thickness=4, color=C_ACCENT, batch=sim_batch)
 
-# Top-left labels
+
 pyglet.text.Label("INVERTED PENDULUM LAB", x=36, y=682, font_size=18, weight="bold",
                   color=C_TEXT, batch=text_batch)
 status_label = pyglet.text.Label("PAUSED", x=38, y=650, font_size=11, weight="bold",
@@ -308,9 +289,9 @@ status_label = pyglet.text.Label("PAUSED", x=38, y=650, font_size=11, weight="bo
 help_label = pyglet.text.Label("MANUAL: ← / →     SPACE: run/pause     R: reset",
                                x=36, y=28, font_size=10, color=C_MUTED, batch=text_batch)
 
-# ============================================================
-# Right panel UI
-# ============================================================
+
+
+
 
 pyglet.text.Label("CONTROL", x=PANEL_X + 26, y=682, font_size=16, weight="bold",
                   color=C_TEXT, batch=text_batch)
@@ -326,7 +307,7 @@ disturb_value_label = pyglet.text.Label(f"{DISTURB_IMPULSE_NS:g}", x=PANEL_X + 3
                                         anchor_x="center", anchor_y="center",
                                         font_name="Consolas", font_size=8, color=C_TEXT, batch=text_batch)
 
-# Formula card
+
 shapes.Rectangle(PANEL_X + 24, 454, 352, 104, color=C_CARD, batch=ui_batch)
 pyglet.text.Label("MOTOR FORMULA  →  force [N]", x=PANEL_X + 38, y=536,
                   font_size=10, weight="bold", color=C_MUTED, batch=text_batch)
@@ -337,7 +318,7 @@ formula_label = pyglet.text.Label(DEFAULT_FORMULA, x=PANEL_X + 48, y=504,
 formula_state_label = pyglet.text.Label("Enterで適用", x=PANEL_X + 38, y=467,
                                         font_size=9, color=C_MUTED, batch=text_batch)
 
-# Variable guide
+
 shapes.Rectangle(PANEL_X + 24, 376, 352, 62, color=C_CARD, batch=ui_batch)
 pyglet.text.Label("theta  omega  x  v  t", x=PANEL_X + 38, y=416,
                   font_name="Consolas", font_size=10, weight="bold", color=C_ACCENT_2 + (255,), batch=text_batch)
@@ -345,7 +326,7 @@ pyglet.text.Label("rad     rad/s    m    m/s   s     |  theta_deg / g / M / m / 
                   x=PANEL_X + 38, y=394, font_name="Consolas", font_size=8,
                   color=C_MUTED, batch=text_batch)
 
-# Telemetry cards
+
 telemetry_cards = [
     (PANEL_X + 24, 315, 168, 48, "ANGLE"),
     (PANEL_X + 208, 315, 168, 48, "ANG.VEL"),
@@ -361,7 +342,7 @@ for x0, y0, w0, h0, title in telemetry_cards:
                             color=C_TEXT, batch=text_batch)
     telemetry_labels.append(lab)
 
-# Force indicator
+
 shapes.Rectangle(PANEL_X + 24, 196, 352, 44, color=C_CARD, batch=ui_batch)
 pyglet.text.Label("MOTOR", x=PANEL_X + 38, y=222, font_size=8, color=C_MUTED, batch=text_batch)
 force_value_label = pyglet.text.Label("0.0 N", x=PANEL_X + 350, y=222, anchor_x="right",
@@ -370,7 +351,7 @@ force_bar_bg = shapes.Rectangle(PANEL_X + 38, 207, 312, 7, color=C_CARD_2, batch
 force_bar = shapes.Rectangle(PANEL_X + 194, 207, 0, 7, color=C_ACCENT, batch=ui_batch)
 force_center = shapes.Rectangle(PANEL_X + 193, 204, 2, 13, color=C_MUTED[:3], batch=ui_batch)
 
-# Angle chart
+
 chart_x = PANEL_X + 24
 chart_y = 32
 chart_w = 352
@@ -398,9 +379,9 @@ for i in range(HISTORY_N - 1):
                        thickness=2, color=C_ACCENT_2, batch=chart_batch)
     history_lines.append(line)
 
-# ============================================================
-# Runtime state
-# ============================================================
+
+
+
 
 mode = "manual"
 running = False
@@ -478,7 +459,7 @@ def reset_simulation():
 def get_state():
     center_x = (TRACK_LEFT + TRACK_RIGHT) / 2
     theta = rod_body.angle
-    # Normalize only for display/control variables, keeping upright at 0.
+
     theta = (theta + math.pi) % (2 * math.pi) - math.pi
     omega = rod_body.angular_velocity
     x_m = (cart_body.position.x - center_x) / PPM
@@ -531,7 +512,7 @@ def physics_step():
     force_n = evaluate_motor_force()
     last_motor_force_n = force_n
 
-    # Convert N to Pymunk pixel-units: 1 m == PPM pixels.
+
     cart_body.apply_force_at_local_point((force_n * PPM, 0), (0, 0))
 
     space.step(PHYSICS_DT)
@@ -539,7 +520,7 @@ def physics_step():
 
 
 def disturb():
-    # Same disturbance as before, but the impulse magnitude can now be entered in the UI.
+
     try:
         impulse_ns = float(disturb_text)
     except ValueError:
@@ -584,7 +565,7 @@ def refresh_disturb_display():
 def refresh_formula_display():
     global formula_view_start
 
-    # Single-line editor view with a movable cursor and horizontal scrolling.
+
     max_chars = 39
     cursor_pos = max(0, min(formula_cursor, len(formula_text)))
 
@@ -595,34 +576,25 @@ def refresh_formula_display():
             raw = raw[:max_chars - 1] + "…"
         formula_label.text = raw
     else:
-        # Keep the cursor visible by showing a window around it.
         start = max(0, cursor_pos - max_chars + 1)
         end = min(len(formula_text), start + max_chars)
         if end - start < max_chars:
             start = max(0, end - max_chars)
         formula_view_start = start
-
         shown = formula_text[start:end]
         local_cursor = cursor_pos - start
         if formula_focused:
             shown = shown[:local_cursor] + "|" + shown[local_cursor:]
-
         if start > 0 and shown:
             shown = "…" + shown[1:]
         if end < len(formula_text) and shown:
             shown = shown[:-1] + "…"
-
         formula_label.text = shown
-
     formula_box.color = C_ACCENT if formula_focused else C_CARD_2
-
-
 def refresh_visuals():
-    # Cart
     cx, cy = cart_body.position
     cart_draw.x = cx - CART_W / 2
     cart_draw.y = cy - CART_H / 2
-
     wheel_y = cy - CART_H / 2 - 4
     wheel_l.x = cx - CART_W * 0.31
     wheel_l.y = wheel_y
@@ -630,15 +602,11 @@ def refresh_visuals():
     wheel_r.y = wheel_y
     wheel_l_hub.x, wheel_l_hub.y = wheel_l.x, wheel_l.y
     wheel_r_hub.x, wheel_r_hub.y = wheel_r.x, wheel_r.y
-
-    # Rod endpoints from body local coordinates.
     p0 = rod_body.local_to_world((0, -ROD_LENGTH / 2))
     p1 = rod_body.local_to_world((0, ROD_LENGTH / 2))
     rod_draw.x, rod_draw.y, rod_draw.x2, rod_draw.y2 = p0.x, p0.y, p1.x, p1.y
     pivot_draw.x, pivot_draw.y = p0.x, p0.y
     com_draw.x, com_draw.y = rod_body.position.x, rod_body.position.y
-
-    # Force arrow
     force_scale = 1.45
     fpx = clamp(last_motor_force_n * force_scale, -120, 120)
     ay = cy + CART_H / 2 + 28
@@ -656,8 +624,6 @@ def refresh_visuals():
         force_tip_a.y = force_tip_a.y2 = ay
         force_tip_b.x = force_tip_b.x2 = ax1
         force_tip_b.y = force_tip_b.y2 = ay
-
-    # Telemetry
     theta, omega, x_m, v_mps = get_state()
     telemetry_labels[0].text = f"{math.degrees(theta):+.2f}°"
     telemetry_labels[1].text = f"{omega:+.3f} rad/s"
@@ -673,12 +639,9 @@ def refresh_visuals():
     else:
         force_bar.x = PANEL_X + 194 + half * normalized
         force_bar.width = -half * normalized
-
     refresh_disturb_display()
     refresh_formula_display()
     refresh_history_lines()
-
-
 def update(dt):
     global accumulator
     if running:
@@ -690,15 +653,8 @@ def update(dt):
             steps += 1
         if steps == MAX_STEPS_PER_FRAME:
             accumulator = 0.0
-
     update_history(dt)
     refresh_visuals()
-
-
-# ============================================================
-# Events
-# ============================================================
-
 @window.event
 def on_draw():
     window.clear()
@@ -707,15 +663,12 @@ def on_draw():
     ui_batch.draw()
     chart_batch.draw()
     text_batch.draw()
-
-
 @window.event
 def on_mouse_press(x, y, button, modifiers):
     global mode, running, formula_focused, formula_cursor, formula_select_all, formula_view_start
     global disturb_focused, disturb_select_all
     if button != mouse.LEFT:
         return
-
     if manual_btn.hit(x, y):
         mode = "manual"
         manual_btn.set_active(True)
@@ -723,7 +676,6 @@ def on_mouse_press(x, y, button, modifiers):
         formula_focused = False
         refresh_formula_display()
         return
-
     if formula_btn.hit(x, y):
         mode = "formula"
         manual_btn.set_active(False)
@@ -731,25 +683,21 @@ def on_mouse_press(x, y, button, modifiers):
         formula_focused = False
         refresh_formula_display()
         return
-
     if run_btn.hit(x, y):
         running = not running
         run_btn.set_text("PAUSE" if running else "RUN")
         status_label.text = "RUNNING" if running else "PAUSED"
         status_label.color = (C_ACCENT_2 + (255,)) if running else (C_WARN + (255,))
         return
-
     if reset_btn.hit(x, y):
         reset_simulation()
         return
-
     if disturb_btn.hit(x, y):
         disturb_focused = False
         disturb_select_all = False
         refresh_disturb_display()
         disturb()
         return
-
     if (PANEL_X + 336 <= x <= PANEL_X + 376 and 574 <= y <= 610):
         disturb_focused = True
         disturb_select_all = True
@@ -758,14 +706,11 @@ def on_mouse_press(x, y, button, modifiers):
         refresh_disturb_display()
         refresh_formula_display()
         return
-
     if (PANEL_X + 37 <= x <= PANEL_X + 363 and 486 <= y <= 522):
         formula_focused = True
         formula_select_all = False
         disturb_focused = False
         disturb_select_all = False
-
-        # Consolas 10pt is close enough to fixed-width for click placement.
         text_left = PANEL_X + 48
         approx_char_px = 7.0
         clicked_index = formula_view_start + int(round((x - text_left) / approx_char_px))
@@ -778,8 +723,6 @@ def on_mouse_press(x, y, button, modifiers):
         disturb_select_all = False
         refresh_disturb_display()
         refresh_formula_display()
-
-
 @window.event
 def on_text(text):
     global formula_text, formula_cursor, formula_select_all
@@ -796,11 +739,8 @@ def on_text(text):
                 disturb_text += filtered
                 refresh_disturb_display()
         return
-
     if not formula_focused:
         return
-
-    # Keep it one-line, but allow insertion at the cursor.
     if text and text not in ("\r", "\n", "\t"):
         if formula_select_all:
             formula_text = ""
@@ -814,13 +754,10 @@ def on_text(text):
         )
         formula_cursor += len(text)
         refresh_formula_display()
-
-
 @window.event
 def on_text_motion(motion):
     global formula_text, formula_cursor, formula_select_all
     global disturb_text, disturb_select_all
-
     if disturb_focused:
         if motion == key.MOTION_COPY:
             window.set_clipboard_text(disturb_text)
@@ -842,10 +779,8 @@ def on_text_motion(motion):
             refresh_disturb_display()
             return
         return
-
     if not formula_focused:
         return
-
     if motion == key.MOTION_LEFT:
         formula_select_all = False
         formula_cursor = max(0, formula_cursor - 1)
@@ -888,16 +823,12 @@ def on_text_motion(motion):
                 formula_cursor += len(pasted)
     else:
         return
-
     refresh_formula_display()
-
-
 @window.event
 def on_key_press(symbol, modifiers):
     global running, left_down, right_down
     global formula_text, formula_focused, formula_cursor, formula_select_all
     global disturb_focused, disturb_text, disturb_select_all
-
     if disturb_focused:
         ctrl = bool(modifiers & key.MOD_CTRL)
         if ctrl and symbol == key.A:
@@ -910,32 +841,25 @@ def on_key_press(symbol, modifiers):
             refresh_disturb_display()
             return
         return
-
     if formula_focused:
         ctrl = bool(modifiers & key.MOD_CTRL)
-
         if ctrl and symbol == key.A:
             formula_select_all = True
             formula_cursor = len(formula_text)
             refresh_formula_display()
             return
-
         if symbol in (key.ENTER, key.NUM_ENTER):
             apply_formula()
             formula_focused = False
             formula_select_all = False
             refresh_formula_display()
             return
-
         if symbol == key.ESCAPE:
             formula_focused = False
             formula_select_all = False
             refresh_formula_display()
             return
-
-        # While editing, arrow keys belong to the editor, not manual control.
         return
-
     if symbol == key.LEFT:
         left_down = True
     elif symbol == key.RIGHT:
@@ -947,8 +871,6 @@ def on_key_press(symbol, modifiers):
         status_label.color = (C_ACCENT_2 + (255,)) if running else (C_WARN + (255,))
     elif symbol == key.R:
         reset_simulation()
-
-
 @window.event
 def on_key_release(symbol, modifiers):
     global left_down, right_down
@@ -956,12 +878,6 @@ def on_key_release(symbol, modifiers):
         left_down = False
     elif symbol == key.RIGHT:
         right_down = False
-
-
-# ============================================================
-# Start
-# ============================================================
-
 apply_formula()
 reset_simulation()
 pyglet.clock.schedule(update)
