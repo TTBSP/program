@@ -45,7 +45,7 @@ MANUAL_FORCE_N = 35.0
 MAX_MOTOR_FORCE_N = 90.0
 DISTURB_IMPULSE_NS = 0.22
 
-DEFAULT_FORMULA = "-90*theta - 18*omega - 4*x - 8*v"
+DEFAULT_FORMULA = "ここに数式を打ち込む"
 
 # -----------------------
 # Theme
@@ -320,7 +320,11 @@ formula_btn = Button(PANEL_X + 208, 626, 168, 38, "FORMULA")
 
 run_btn = Button(PANEL_X + 24, 574, 110, 36, "RUN", accent=True)
 reset_btn = Button(PANEL_X + 145, 574, 110, 36, "RESET")
-disturb_btn = Button(PANEL_X + 266, 574, 110, 36, "DISTURB")
+disturb_btn = Button(PANEL_X + 266, 574, 66, 36, "DISTURB")
+disturb_box = shapes.Rectangle(PANEL_X + 336, 574, 40, 36, color=C_CARD_2, batch=ui_batch)
+disturb_value_label = pyglet.text.Label(f"{DISTURB_IMPULSE_NS:g}", x=PANEL_X + 356, y=592,
+                                        anchor_x="center", anchor_y="center",
+                                        font_name="Consolas", font_size=8, color=C_TEXT, batch=text_batch)
 
 # Formula card
 shapes.Rectangle(PANEL_X + 24, 454, 352, 104, color=C_CARD, batch=ui_batch)
@@ -409,6 +413,9 @@ formula_select_all = False
 formula_view_start = 0
 formula_code = None
 formula_error = ""
+disturb_focused = False
+disturb_text = f"{DISTURB_IMPULSE_NS:g}"
+disturb_select_all = False
 sim_time = 0.0
 accumulator = 0.0
 last_motor_force_n = 0.0
@@ -532,8 +539,15 @@ def physics_step():
 
 
 def disturb():
-    # Repeatable sideways impulse at the rod COM.
-    rod_body.apply_impulse_at_local_point((DISTURB_IMPULSE_NS * PPM, 0), (0, ROD_LENGTH / 3))
+    # Same disturbance as before, but the impulse magnitude can now be entered in the UI.
+    try:
+        impulse_ns = float(disturb_text)
+    except ValueError:
+        disturb_value_label.text = "ERR"
+        disturb_box.color = C_BAD
+        return
+
+    rod_body.apply_impulse_at_local_point((impulse_ns * PPM, 0), (0, ROD_LENGTH / 3))
     rod_body.activate()
 
 
@@ -559,6 +573,12 @@ def refresh_history_lines():
         y1 = plot_bottom + h * (d1 + span) / (2 * span)
         y2 = plot_bottom + h * (d2 + span) / (2 * span)
         line.x, line.y, line.x2, line.y2 = x1, y1, x2, y2
+
+
+def refresh_disturb_display():
+    shown = disturb_text[-6:] if disturb_text else ""
+    disturb_value_label.text = shown
+    disturb_box.color = C_ACCENT if disturb_focused else C_CARD_2
 
 
 def refresh_formula_display():
@@ -654,6 +674,7 @@ def refresh_visuals():
         force_bar.x = PANEL_X + 194 + half * normalized
         force_bar.width = -half * normalized
 
+    refresh_disturb_display()
     refresh_formula_display()
     refresh_history_lines()
 
@@ -691,6 +712,7 @@ def on_draw():
 @window.event
 def on_mouse_press(x, y, button, modifiers):
     global mode, running, formula_focused, formula_cursor, formula_select_all, formula_view_start
+    global disturb_focused, disturb_select_all
     if button != mouse.LEFT:
         return
 
@@ -722,12 +744,26 @@ def on_mouse_press(x, y, button, modifiers):
         return
 
     if disturb_btn.hit(x, y):
+        disturb_focused = False
+        disturb_select_all = False
+        refresh_disturb_display()
         disturb()
+        return
+
+    if (PANEL_X + 336 <= x <= PANEL_X + 376 and 574 <= y <= 610):
+        disturb_focused = True
+        disturb_select_all = True
+        formula_focused = False
+        formula_select_all = False
+        refresh_disturb_display()
+        refresh_formula_display()
         return
 
     if (PANEL_X + 37 <= x <= PANEL_X + 363 and 486 <= y <= 522):
         formula_focused = True
         formula_select_all = False
+        disturb_focused = False
+        disturb_select_all = False
 
         # Consolas 10pt is close enough to fixed-width for click placement.
         text_left = PANEL_X + 48
@@ -738,12 +774,29 @@ def on_mouse_press(x, y, button, modifiers):
     else:
         formula_focused = False
         formula_select_all = False
+        disturb_focused = False
+        disturb_select_all = False
+        refresh_disturb_display()
         refresh_formula_display()
 
 
 @window.event
 def on_text(text):
     global formula_text, formula_cursor, formula_select_all
+    global disturb_text, disturb_select_all
+
+    if disturb_focused:
+        if text and text not in ("\r", "\n", "\t"):
+            allowed = "0123456789.-+eE"
+            filtered = "".join(ch for ch in text if ch in allowed)
+            if filtered:
+                if disturb_select_all:
+                    disturb_text = ""
+                    disturb_select_all = False
+                disturb_text += filtered
+                refresh_disturb_display()
+        return
+
     if not formula_focused:
         return
 
@@ -764,9 +817,99 @@ def on_text(text):
 
 
 @window.event
+def on_text_motion(motion):
+    global formula_text, formula_cursor, formula_select_all
+    global disturb_text, disturb_select_all
+
+    if disturb_focused:
+        if motion == key.MOTION_COPY:
+            window.set_clipboard_text(disturb_text)
+            return
+        if motion == key.MOTION_PASTE:
+            pasted = window.get_clipboard_text()
+            filtered = "".join(ch for ch in pasted if ch in "0123456789.-+eE")
+            if filtered:
+                disturb_text = filtered if disturb_select_all else disturb_text + filtered
+                disturb_select_all = False
+                refresh_disturb_display()
+            return
+        if motion in (key.MOTION_BACKSPACE, key.MOTION_DELETE):
+            if disturb_select_all:
+                disturb_text = ""
+                disturb_select_all = False
+            elif disturb_text:
+                disturb_text = disturb_text[:-1]
+            refresh_disturb_display()
+            return
+        return
+
+    if not formula_focused:
+        return
+
+    if motion == key.MOTION_LEFT:
+        formula_select_all = False
+        formula_cursor = max(0, formula_cursor - 1)
+    elif motion == key.MOTION_RIGHT:
+        formula_select_all = False
+        formula_cursor = min(len(formula_text), formula_cursor + 1)
+    elif motion in (key.MOTION_BEGINNING_OF_LINE, key.MOTION_BEGINNING_OF_FILE):
+        formula_select_all = False
+        formula_cursor = 0
+    elif motion in (key.MOTION_END_OF_LINE, key.MOTION_END_OF_FILE):
+        formula_select_all = False
+        formula_cursor = len(formula_text)
+    elif motion == key.MOTION_BACKSPACE:
+        if formula_select_all:
+            formula_text = ""
+            formula_cursor = 0
+            formula_select_all = False
+        elif formula_cursor > 0:
+            formula_text = formula_text[:formula_cursor - 1] + formula_text[formula_cursor:]
+            formula_cursor -= 1
+    elif motion == key.MOTION_DELETE:
+        if formula_select_all:
+            formula_text = ""
+            formula_cursor = 0
+            formula_select_all = False
+        elif formula_cursor < len(formula_text):
+            formula_text = formula_text[:formula_cursor] + formula_text[formula_cursor + 1:]
+    elif motion == key.MOTION_COPY:
+        window.set_clipboard_text(formula_text)
+        return
+    elif motion == key.MOTION_PASTE:
+        pasted = window.get_clipboard_text().replace("\r", " ").replace("\n", " ").replace("\t", " ")
+        if pasted:
+            if formula_select_all:
+                formula_text = pasted
+                formula_cursor = len(formula_text)
+                formula_select_all = False
+            else:
+                formula_text = formula_text[:formula_cursor] + pasted + formula_text[formula_cursor:]
+                formula_cursor += len(pasted)
+    else:
+        return
+
+    refresh_formula_display()
+
+
+@window.event
 def on_key_press(symbol, modifiers):
     global running, left_down, right_down
     global formula_text, formula_focused, formula_cursor, formula_select_all
+    global disturb_focused, disturb_text, disturb_select_all
+
+    if disturb_focused:
+        ctrl = bool(modifiers & key.MOD_CTRL)
+        if ctrl and symbol == key.A:
+            disturb_select_all = True
+            refresh_disturb_display()
+            return
+        if symbol in (key.ENTER, key.NUM_ENTER, key.ESCAPE):
+            disturb_focused = False
+            disturb_select_all = False
+            refresh_disturb_display()
+            return
+        return
 
     if formula_focused:
         ctrl = bool(modifiers & key.MOD_CTRL)
@@ -774,57 +917,6 @@ def on_key_press(symbol, modifiers):
         if ctrl and symbol == key.A:
             formula_select_all = True
             formula_cursor = len(formula_text)
-            refresh_formula_display()
-            return
-
-        if symbol == key.LEFT:
-            formula_select_all = False
-            formula_cursor = max(0, formula_cursor - 1)
-            refresh_formula_display()
-            return
-
-        if symbol == key.RIGHT:
-            formula_select_all = False
-            formula_cursor = min(len(formula_text), formula_cursor + 1)
-            refresh_formula_display()
-            return
-
-        if symbol == key.HOME:
-            formula_select_all = False
-            formula_cursor = 0
-            refresh_formula_display()
-            return
-
-        if symbol == key.END:
-            formula_select_all = False
-            formula_cursor = len(formula_text)
-            refresh_formula_display()
-            return
-
-        if symbol == key.BACKSPACE:
-            if formula_select_all:
-                formula_text = ""
-                formula_cursor = 0
-                formula_select_all = False
-            elif formula_cursor > 0:
-                formula_text = (
-                    formula_text[:formula_cursor - 1]
-                    + formula_text[formula_cursor:]
-                )
-                formula_cursor -= 1
-            refresh_formula_display()
-            return
-
-        if symbol == key.DELETE:
-            if formula_select_all:
-                formula_text = ""
-                formula_cursor = 0
-                formula_select_all = False
-            elif formula_cursor < len(formula_text):
-                formula_text = (
-                    formula_text[:formula_cursor]
-                    + formula_text[formula_cursor + 1:]
-                )
             refresh_formula_display()
             return
 
