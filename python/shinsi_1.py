@@ -45,7 +45,7 @@ MANUAL_FORCE_N = 35.0
 MAX_MOTOR_FORCE_N = 90.0
 DISTURB_IMPULSE_NS = 0.22
 
-DEFAULT_FORMULA = "ここに数式を打ち込む"
+DEFAULT_FORMULA = "-60*theta"
 
 # -----------------------
 # Theme
